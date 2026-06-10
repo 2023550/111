@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫猫版时空旅行者 - 古今中外采访录</title>
+    <style>
+        :root { --bg: #1a1a2e; --gold: #d4a574; --accent: #e8b86d; --rift: #7b68ee; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); font-family:'Georgia','STSong',serif; overflow:hidden; height:100vh; width:100vw; user-select:none; display:flex; align-items:center; justify-content:center; }
+        .stars-container { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+        .star { position:absolute; background:white; border-radius:50%; animation:twinkle var(--dur) infinite; animation-delay:var(--delay); }
+        @keyframes twinkle { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.8)} }
+        .game-container { position:relative; z-index:1; width:100vw; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        .time-rift-bg { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:500px; height:500px; border-radius:50%; background:radial-gradient(ellipse,rgba(123,104,238,0.12) 0%,transparent 70%); pointer-events:none; z-index:0; animation:riftPulse 4s infinite; }
+        @keyframes riftPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);opacity:0.6} 50%{transform:translate(-50%,-50%) scale(1.2);opacity:1} }
+        .scene-panel { position:relative; z-index:2; width:92vw; max-width:1000px; height:88vh; max-height:700px; background:rgba(22,33,62,0.95); border-radius:28px; border:2px solid rgba(212,167,116,0.4); box-shadow:0 0 60px rgba(123,104,238,0.2),0 0 120px rgba(0,0,0,0.5); display:flex; flex-direction:column; overflow:visible; transition:0.6s; }
+        .scene-panel.rift-active { border-color:rgba(180,140,220,0.8); }
+        .title-bar { display:flex; align-items:center; padding:12px 20px; background:linear-gradient(180deg,rgba(30,25,20,0.9),rgba(22,33,62,0.7)); border-bottom:1px solid rgba(212,167,116,0.3); }
+        .game-title { font-size:1.3em; font-weight:bold; color:var(--accent); text-shadow:0 0 20px rgba(232,184,109,0.5); }
+        .era-indicator { font-size:0.75em; color:#c9b896; background:rgba(212,167,116,0.15); padding:4px 12px; border-radius:20px; border:1px solid rgba(212,167,116,0.3); margin-left:auto; margin-right:10px; }
+        .help-btn { width:30px; height:30px; border-radius:50%; background:rgba(232,184,109,0.2); border:2px solid rgba(232,184,109,0.5); color:#f0d8b0; font-size:1.1em; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:0.3s; }
+        .help-btn:hover { background:rgba(232,184,109,0.4); box-shadow:0 0 15px rgba(232,184,109,0.5); }
+        .main-stage { flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:350px; overflow:visible; }
+        .scene-decoration { position:absolute; bottom:0; left:0; right:0; height:45%; pointer-events:none; opacity:0.5; transition:0.8s; overflow:hidden; }
+        .scene-decoration.qin { background:linear-gradient(0deg,rgba(80,30,20,0.6),transparent); }
+        .scene-decoration.qin::after { content:'🏯'; position:absolute; bottom:10px; left:20px; font-size:4em; opacity:0.25; }
+        .scene-decoration.han { background:linear-gradient(0deg,rgba(30,60,40,0.6),transparent); }
+        .scene-decoration.han::after { content:'🎋'; position:absolute; bottom:10px; right:30px; font-size:4em; opacity:0.25; }
+        .scene-decoration.tang { background:linear-gradient(0deg,rgba(60,20,50,0.5),transparent); }
+        .scene-decoration.tang::after { content:'🌸'; position:absolute; bottom:10px; left:40px; font-size:4em; opacity:0.25; }
+        .scene-decoration.song { background:linear-gradient(0deg,rgba(40,50,30,0.5),transparent); }
+        .scene-decoration.song::after { content:'🏮'; position:absolute; bottom:10px; right:20px; font-size:4em; opacity:0.25; }
+        .scene-decoration.ming { background:linear-gradient(0deg,rgba(20,40,70,0.5),transparent); }
+        .scene-decoration.ming::after { content:'⛵'; position:absolute; bottom:10px; left:30px; font-size:4em; opacity:0.25; }
+        .scene-decoration.qing { background:linear-gradient(0deg,rgba(70,50,20,0.5),transparent); }
+        .scene-decoration.qing::after { content:'🏔️'; position:absolute; bottom:10px; right:25px; font-size:4em; opacity:0.25; }
+        .scene-decoration.egypt { background:linear-gradient(0deg,rgba(80,70,30,0.5),transparent); }
+        .scene-decoration.egypt::after { content:'🔼'; position:absolute; bottom:10px; left:30px; font-size:5em; opacity:0.25; }
+        .scene-decoration.europe { background:linear-gradient(0deg,rgba(40,40,60,0.5),transparent); }
+        .scene-decoration.europe::after { content:'🏰'; position:absolute; bottom:10px; left:30px; font-size:4em; opacity:0.25; }
+        .scene-decoration.modern { background:linear-gradient(0deg,rgba(50,50,70,0.5),transparent); }
+        .scene-decoration.modern::after { content:'🏙️'; position:absolute; bottom:10px; right:30px; font-size:4em; opacity:0.25; }
+        .characters-zone { position:relative; z-index:3; display:flex; align-items:flex-end; justify-content:center; gap:50px; width:100%; height:100%; padding-bottom:25px; }
+
+        /* 通用容器 */
+        .character-wrapper { display:flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.35s; animation:charFloat 3s ease-in-out infinite; }
+        .character-wrapper:hover { transform:scale(1.1); z-index:10; }
+        @keyframes charFloat { 0%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} 50%{transform:translateY(0)} 70%{transform:translateY(-3px)} }
+
+        /* 猫咪头部 */
+        .cat-head { width:55px; height:48px; border-radius:50%; position:relative; z-index:3; margin-bottom:-2px; }
+        .cat-ear { position:absolute; width:0; height:0; border-left:11px solid transparent; border-right:11px solid transparent; border-bottom:22px solid; z-index:1; }
+        .cat-ear.left { top:-18px; left:4px; transform:rotate(-10deg); }
+        .cat-ear.right { top:-18px; right:4px; transform:rotate(10deg); }
+        .cat-ear::after { content:''; position:absolute; top:5px; left:-5px; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:12px solid #f4b8b0; border-radius:2px; }
+        .cat-eyes { position:absolute; top:16px; left:50%; transform:translateX(-50%); display:flex; gap:13px; z-index:3; }
+        .cat-eye { width:13px; height:15px; border-radius:50%; background:#fffef5; position:relative; overflow:hidden; animation:eyeBlink 4s infinite; }
+        @keyframes eyeBlink { 0%,45%,55%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.05)} }
+        .cat-eye::after { content:''; position:absolute; width:7px; height:9px; background:#1a1a1a; border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); }
+        .eye-shine { position:absolute; width:3px; height:3px; background:white; border-radius:50%; top:3px; left:6px; z-index:4; }
+        .cat-nose { position:absolute; top:29px; left:50%; transform:translateX(-50%); width:7px; height:4px; background:#f0a0a0; border-radius:50% 50% 40% 40%; z-index:3; }
+        .cat-mouth { position:absolute; top:32px; left:50%; transform:translateX(-50%); z-index:3; }
+        .cat-mouth::before,.cat-mouth::after { content:''; position:absolute; width:8px; height:4px; border-bottom:2px solid #5a4030; top:1px; }
+        .cat-mouth::before { left:-8px; border-right:2px solid #5a4030; border-radius:0 0 0 50%; }
+        .cat-mouth::after { left:0; border-left:2px solid #5a4030; border-radius:0 0 50% 0; }
+        .cat-blush { position:absolute; width:10px; height:5px; background:rgba(255,170,160,0.5); border-radius:50%; z-index:3; top:30px; }
+        .cat-blush.left { left:5px; } .cat-blush.right { right:5px; }
+        .cat-whiskers { position:absolute; top:29px; left:50%; transform:translateX(-50%); width:60px; height:12px; pointer-events:none; z-index:3; }
+        .whisk { position:absolute; height:1.5px; background:rgba(170,160,150,0.5); border-radius:1px; }
+        .whisk.wl1 { left:0; top:2px; width:26px; transform:rotate(-3deg); }
+        .whisk.wl2 { left:2px; top:7px; width:24px; transform:rotate(4deg); }
+        .whisk.wr1 { right:0; top:2px; width:26px; transform:rotate(3deg); }
+        .whisk.wr2 { right:2px; top:7px; width:24px; transform:rotate(-4deg); }
+
+        /* 历史人物身体（古代服装） */
+        .cat-body { width:60px; height:80px; border-radius:10px 10px 16px 16px; position:relative; z-index:2; box-shadow:0 4px 15px rgba(0,0,0,0.35); }
+        .cross-collar { position:absolute; top:0; left:50%; transform:translateX(-50%); width:50px; height:16px; z-index:4; clip-path:polygon(0 0,100% 0,85% 100%,15% 100%); }
+        .belt { position:absolute; top:38px; left:50%; transform:translateX(-50%); width:52px; height:7px; border-radius:3px; z-index:4; }
+        .sleeves { position:absolute; top:8px; z-index:1; }
+        .sleeve { position:absolute; width:18px; height:35px; border-radius:9px; }
+        .sleeve.left { left:-14px; transform:rotate(6deg); }
+        .sleeve.right { right:-14px; transform:rotate(-6deg); }
+        .skirt { position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:70px; height:25px; border-radius:0 0 16px 16px; z-index:0; }
+        .cat-tag { margin-top:4px; font-size:0.6em; color:var(--accent); text-align:center; white-space:nowrap; font-weight:bold; background:rgba(0,0,0,0.5); padding:2px 8px; border-radius:8px; }
+
+        /* 主角身体（现代夹克） */
+        .modern-body { width:60px; height:80px; border-radius:10px 10px 16px 16px; position:relative; z-index:2; box-shadow:0 4px 15px rgba(0,0,0,0.35); background:linear-gradient(#3a5a7c,#2c4a6a); }
+        .modern-jacket { position:absolute; top:8px; left:4px; right:4px; height:38px; background:#4a6a8a; border-radius:5px; z-index:2; border:2px solid #5a7a9a; }
+        .modern-collar { position:absolute; top:2px; left:50%; transform:translateX(-50%); width:40px; height:10px; background:#5a7a9a; border-radius:3px; z-index:3; }
+        .modern-belt { position:absolute; top:48px; left:50%; transform:translateX(-50%); width:48px; height:6px; background:linear-gradient(90deg,#7b68ee,#e8b86d,#7b68ee); border-radius:3px; z-index:4; box-shadow:0 0 8px rgba(123,104,238,0.4); animation:beltPulse 2s infinite; }
+        @keyframes beltPulse { 0%,100%{box-shadow:0 0 6px rgba(123,104,238,0.4)} 50%{box-shadow:0 0 14px rgba(123,104,238,0.8)} }
+        .modern-watch { position:absolute; top:58px; left:50%; transform:translateX(-50%); width:14px; height:14px; background:radial-gradient(circle,#f0e68c,#daa520); border:2px solid #b8860b; border-radius:50%; z-index:5; box-shadow:0 0 8px rgba(255,215,0,0.5); animation:watchGlow 2s infinite; }
+        @keyframes watchGlow { 0%,100%{box-shadow:0 0 6px rgba(255,215,0,0.4)} 50%{box-shadow:0 0 14px rgba(255,215,0,0.8)} }
+        .modern-goggles { position:absolute; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:4px; z-index:5; }
+        .goggle-lens { width:14px; height:14px; border-radius:50%; background:rgba(120,180,220,0.7); border:2px solid #5a7a9a; box-shadow:0 0 6px rgba(120,180,240,0.5); }
+        .modern-sleeves { position:absolute; top:14px; z-index:1; }
+        .modern-sleeve { position:absolute; width:16px; height:30px; border-radius:8px; background:#3a5a7c; }
+        .modern-sleeve.left { left:-12px; transform:rotate(6deg); }
+        .modern-sleeve.right { right:-12px; transform:rotate(-6deg); }
+
+        .dialogue-bubble { position:absolute; top:-80px; left:50%; transform:translateX(-50%); background:rgba(255,252,245,0.95); color:#3a2a1a; padding:10px 14px; border-radius:14px; min-width:110px; max-width:220px; text-align:center; z-index:20; box-shadow:0 5px 20px rgba(0,0,0,0.5); border:2px solid rgba(180,150,120,0.6); animation:bubbleAppear 0.4s; pointer-events:none; line-height:1.4; font-size:0.75em; }
+        .dialogue-bubble::after { content:''; position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); border-left:10px solid transparent; border-right:10px solid transparent; border-top:12px solid rgba(255,252,245,0.95); }
+        @keyframes bubbleAppear { from{opacity:0;transform:translateX(-50%) translateY(10px) scale(0.85)} to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)} }
+        .question-overlay { position:fixed; bottom:0; left:0; right:0; z-index:50; display:flex; justify-content:center; align-items:flex-end; padding:18px; pointer-events:none; animation:slideUp 0.5s ease-out; }
+        @keyframes slideUp { from{transform:translateY(100px);opacity:0} to{transform:translateY(0);opacity:1} }
+        .question-panel { background:rgba(22,33,62,0.95); border:3px solid var(--accent); border-radius:22px; padding:16px 22px; display:flex; gap:14px; box-shadow:0 -8px 35px rgba(0,0,0,0.6); pointer-events:auto; max-width:900px; width:100%; }
+        .q-title { color:var(--accent); font-weight:bold; font-size:0.9em; writing-mode:vertical-rl; letter-spacing:0.06em; margin-right:6px; flex-shrink:0; }
+        .q-btn { padding:12px 18px; border-radius:18px; border:2px solid rgba(232,184,109,0.6); background:rgba(232,184,109,0.15); color:#f0d8b0; cursor:pointer; font-size:0.9em; transition:0.3s; text-align:center; flex:1; font-weight:bold; writing-mode:horizontal-tb; direction:ltr; }
+        .q-btn:hover { background:rgba(232,184,109,0.35); border-color:#f0d8b0; box-shadow:0 0 18px rgba(232,184,109,0.5); transform:translateY(-2px); }
+        @media(max-width:768px){.question-panel{flex-direction:column;gap:8px}.q-title{writing-mode:horizontal-tb;margin-right:0;text-align:center;width:100%}.cat-body,.modern-body{width:48px;height:65px}.cat-head{width:44px;height:40px}}
+        .book-zone{position:absolute;top:-22px;left:50%;transform:translateX(-50%);z-index:25;perspective:800px;cursor:pointer;}
+        .book{width:65px;height:88px;position:relative;transform-style:preserve-3d;transition:0.6s;}
+        .book.flipping{animation:flipBook 1s;}
+        @keyframes flipBook{0%{transform:rotateY(0)}50%{transform:rotateY(-90deg)}100%{transform:rotateY(0)}}
+        .book-page{position:absolute;width:100%;height:100%;background:linear-gradient(145deg,#f5f0e0,#e0d5b8);border:3px solid #b89b6e;border-radius:3px 7px 7px 3px;box-shadow:0 5px 12px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;font-size:0.95em;color:#4a3a2a;}
+        .book-spine{position:absolute;left:50%;top:0;width:4px;height:100%;background:#8b6b4a;transform:translateX(-50%);border-radius:2px;}
+        .token-btn{position:absolute;bottom:15px;right:18px;z-index:25;width:50px;height:78px;background:linear-gradient(#c8a060,#8b5e30);border:3px solid #5a3a1a;border-radius:7px 7px 3px 3px;box-shadow:0 5px 15px rgba(0,0,0,0.6);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:0.3s;}
+        .token-btn:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(200,160,60,0.4);}
+        .token-text{writing-mode:vertical-rl;color:#f8e8c0;font-size:0.95em;letter-spacing:3px;text-shadow:2px 2px 4px rgba(0,0,0,0.6);}
+        .control-bar{display:flex;align-items:center;justify-content:center;gap:15px;padding:8px;background:rgba(20,18,15,0.9);border-top:1px solid rgba(212,167,116,0.3);}
+        .ctrl-btn{padding:7px 16px;border-radius:20px;border:2px solid #7b68ee;background:rgba(123,104,238,0.2);color:#c8b8f8;cursor:pointer;font-weight:bold;transition:0.3s;}
+        .ctrl-btn:hover{background:rgba(123,104,238,0.4);color:#fff;box-shadow:0 0 18px rgba(123,104,238,0.5);}
+        .flash-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:white;z-index:100;pointer-events:none;opacity:0;transition:0.3s;}
+        .flash-overlay.active{opacity:0.7;}
+        .help-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:0.3s;}
+        .help-overlay.active{opacity:1;pointer-events:auto;}
+        .help-panel{background:linear-gradient(135deg,#1e2a4a,#16213e);border:2px solid rgba(212,167,116,0.5);border-radius:24px;padding:24px;max-width:450px;color:#f0e6d3;position:relative;}
+        .help-close{position:absolute;top:10px;right:16px;background:none;border:none;color:#d4a574;font-size:1.6em;cursor:pointer;}
+        .intro-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(ellipse at center,#0a0a1a 0%,#000010 100%);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.5s,visibility 1.5s;}
+        .intro-overlay.fade-out{opacity:0;visibility:hidden;pointer-events:none;}
+        .intro-rift{width:280px;height:280px;border-radius:50%;background:conic-gradient(from 0deg,transparent,rgba(123,104,238,0.3),transparent,rgba(232,184,109,0.3),transparent);animation:riftSpin 3s linear infinite;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(8px);}
+        .intro-rift:nth-child(2){width:180px;height:180px;animation-direction:reverse;animation-duration:2s;filter:blur(4px);}
+        @keyframes riftSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+        .intro-title{font-size:2em;font-weight:bold;color:var(--accent);text-shadow:0 0 40px rgba(232,184,109,0.8);z-index:201;animation:titleGlow 2s ease-in-out infinite;margin-bottom:20px;}
+        @keyframes titleGlow{0%,100%{text-shadow:0 0 30px rgba(232,184,109,0.6)}50%{text-shadow:0 0 60px rgba(232,184,109,1)}}
+        .intro-story{color:#c9b896;font-size:0.95em;text-align:center;max-width:480px;line-height:1.8;z-index:201;min-height:70px;letter-spacing:0.04em;}
+        .intro-story .cursor::after{content:'|';animation:blink 0.8s infinite;color:var(--accent);}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+        .intro-btn{margin-top:30px;padding:14px 40px;border-radius:30px;border:2px solid var(--accent);background:rgba(232,184,109,0.2);color:var(--accent);font-size:1.2em;cursor:pointer;letter-spacing:0.06em;font-weight:bold;z-index:201;transition:0.4s;opacity:0;animation:btnAppear 1s 4s forwards;}
+        .intro-btn:hover{background:rgba(232,184,109,0.4);box-shadow:0 0 30px rgba(232,184,109,0.6);transform:scale(1.05);}
+        @keyframes btnAppear{to{opacity:1}}
+    </style>
+</head>
+<body>
+    <div class="intro-overlay" id="introOverlay"><div class="intro-rift"></div><div class="intro-rift"></div><div class="intro-title">🐱 猫猫版·时空旅行者</div><div class="intro-story" id="introStory"><span id="storyText"></span><span class="cursor"></span></div><button class="intro-btn" id="introBtn" onclick="startGame()">✨ 开 始 穿 越 ✨</button></div>
+    <div class="stars-container" id="starsContainer"></div>
+    <div class="flash-overlay" id="flashOverlay"></div>
+    <div class="game-container"><div class="scene-panel" id="scenePanel"><div class="title-bar"><span class="game-title">🐱 猫猫版·时空旅行者</span><span class="era-indicator" id="eraIndicator">⏳ 时间枢纽站</span><div class="help-btn" id="helpBtn">?</div></div><div class="main-stage"><div class="scene-decoration" id="sceneDecoration"></div><div class="characters-zone" id="charactersZone"></div><div class="book-zone" id="bookContainer"><div class="book" id="book"><div class="book-page">📖</div><div class="book-spine"></div><div class="book-page">📜</div></div></div></div><div class="control-bar"><button class="ctrl-btn" onclick="window.gameRandom()">🎲 随机穿越</button></div><div class="token-btn" id="tokenBtn"><span class="token-text">令<br>牌</span></div></div></div>
+    <div class="help-overlay" id="helpOverlay"><div class="help-panel"><button class="help-close" id="helpClose">&times;</button><h3>🐾 操作指南</h3><ul style="list-style:none;padding:0;"><li>📖 翻书 / 🪙 令牌：随机召唤历史猫猫</li><li>🐱 点击历史猫猫：底部弹随机问题</li><li>🧥 点击主角喵：听网络热梗心声</li><li>⌨️ 空格键：弹出问题 | R：随机穿越 | ←→：切换</li></ul></div></div>
+    <script>
+        (function() {
+            const sc = document.getElementById('starsContainer');
+            for (let i = 0; i < 100; i++) { const s = document.createElement('div'); s.className = 'star'; s.style.cssText = `width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${Math.random()*3+2}s;--delay:${Math.random()*5}s`; sc.appendChild(s); }
+            const storyFull = "在时空的裂缝中，一只普通的橘猫捡到了一块神秘的怀表……\n\n这块怀表拥有穿越时空的力量，能打开通往任何时代的大门。\n\n从秦朝长城到埃及金字塔，从唐朝长安到欧洲古堡……\n\n它穿上了现代夹克，戴上护目镜，成为了「时间旅行喵」……\n\n翻开史书，转动令牌，开启你的时空采访之旅吧！🐾";
+            const storyEl = document.getElementById('storyText');
+            let charIndex = 0;
+            function typeStory() { if (charIndex < storyFull.length) { storyEl.textContent += storyFull[charIndex]; charIndex++; setTimeout(typeStory, 45); } else { document.querySelector('.cursor').style.display = 'none'; } }
+            setTimeout(typeStory, 800);
+            window.startGame = function() { document.getElementById('introOverlay').classList.add('fade-out'); setTimeout(() => { document.getElementById('introOverlay').style.display = 'none'; }, 1500); };
+            const el = { sd: document.getElementById('sceneDecoration'), ei: document.getElementById('eraIndicator'), cz: document.getElementById('charactersZone'), fo: document.getElementById('flashOverlay'), bk: document.getElementById('book'), tt: document.querySelector('.token-text'), ho: document.getElementById('helpOverlay') };
+            document.getElementById('helpBtn').addEventListener('click', () => el.ho.classList.add('active'));
+            document.getElementById('helpClose').addEventListener('click', () => el.ho.classList.remove('active'));
+            el.ho.addEventListener('click', (e) => { if (e.target === el.ho) el.ho.classList.remove('active'); });
+            function randomPick(arr, n) { const shuffled = [...arr].sort(() => Math.random() - 0.5); return shuffled.slice(0, n); }
+
+            const chars = [
+                { id:'qin', dy:'秦朝', yr:'前221', nm:'秦始皇', tt:'千古一帝', dc:'qin', hd:'#f8e8d5', ear:'#e0c8a0', body:'linear-gradient(#1a1a1a,#0d0d0d)', sleeve:'#1a1a1a', belt:'#b8861e', collar:'#d4a740', skirt:'#0d0d0d',
+                  extra:'<div style="position:absolute;top:-22px;left:50%;transform:translateX(-50%);width:44px;height:24px;background:linear-gradient(#d4a740,#b8861e);border-radius:6px 6px 0 0;z-index:10;border:2px solid #8b6508;"></div>'+'<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;gap:2px;z-index:10;">'+'<div style="width:3px;height:9px;background:linear-gradient(#f0d878,#c8a830);border-radius:1px;"></div>'.repeat(5)+'</div>',
+                  qs:[{q:'听说您追求长生不老，现在感觉怎么样？',a:'哼！那些方士都是骗子喵！朕被坑惨了…'},{q:'如果穿越到现代，最想做什么？',a:'开个兵马俑主题乐园！门票收小鱼干喵～'},{q:'焚书坑儒这事儿，您后悔吗？',a:'统一思想喵！虽然手段有点过激，但为了大秦江山，值！'},{q:'用一种颜色形容自己？',a:'黑色！威严、神秘、还有龙袍加成喵。'},{q:'最想对后人说的一句话？',a:'朕的江山，你们要好好卷起来守护喵！'}] },
+                { id:'caocao', dy:'东汉', yr:'200', nm:'曹操', tt:'乱世枭雄', dc:'han', hd:'#f0dcc0', ear:'#d8c0a0', body:'linear-gradient(#4a1a1a,#2a0808)', sleeve:'#4a1a1a', belt:'#6a2a10', collar:'#8b3a20', skirt:'#2a0808', extra:'<div style="position:absolute;top:4px;left:-18px;font-size:18px;z-index:6;">⚔️</div>',
+                  qs:[{q:'您真的喜欢别人的老婆吗？',a:'喵哈哈！英雄爱美人，但治国才是正事。'},{q:'官渡之战怎么赢的？',a:'火烧乌巢！许攸那个二五仔帮了大忙喵。'},{q:'和刘备煮酒论英雄时心里想什么？',a:'这小子将来必成大器…当时该摔杯子为号喵！'},{q:'最想吐槽的对手？',a:'诸葛亮！太能算计了，本喵头疼喵。'}] },
+                { id:'wuzetian', dy:'唐朝', yr:'690', nm:'武则天', tt:'一代女皇', dc:'tang', hd:'#fef6f0', ear:'#e8c8b0', body:'linear-gradient(#c92030,#8a1018)', sleeve:'#c01828', belt:'#d4a020', collar:'#f0c860', skirt:'#8a1018', extra:'<div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:48px;height:26px;background:linear-gradient(#f0c860,#d4a020);border-radius:8px 8px 3px 3px;z-index:10;border:2px solid #a07818;"></div><div style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:14px;z-index:11;">💎</div>',
+                  qs:[{q:'当女皇最大的爽点是什么？',a:'所有大臣都得对朕低头喵～谁还敢说女子不如男？'},{q:'如果重生一次会怎样？',a:'朕还是会选择当皇帝！喵生无悔，泰裤辣！'},{q:'最想对质疑者说什么？',a:'你们行你们上啊喵！键盘侠退散。'},{q:'用一种花形容自己？',a:'牡丹！国色天香，雍容华贵，绝绝子喵。'}] },
+                { id:'libai', dy:'唐朝', yr:'742', nm:'李白', tt:'诗仙', dc:'tang', hd:'#fef9f4', ear:'#e5c8a8', body:'linear-gradient(#faf6f0,#e8dcc8)', sleeve:'#f0e8d8', belt:'#4a3020', collar:'#5a4030', skirt:'#e8dcc8', extra:'<div style="position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:34px;height:10px;background:#5a4030;border-radius:5px;z-index:10;"></div>',
+                  qs:[{q:'酒和诗哪个更重要？',a:'酒是诗的灵魂喵！没有酒哪有诗～'},{q:'最想和谁一起喝酒？',a:'月亮！还有杜甫那个闷葫芦喵。'},{q:'如果写现代诗？',a:'啊/月亮/你真圆/像小鱼干/美味喵～'},{q:'最想吐槽的事？',a:'为什么总有人让我参加科举？无聊喵！'}] },
+                { id:'zhenghe', dy:'明朝', yr:'1405', nm:'郑和', tt:'航海先驱', dc:'ming', hd:'#fef6ee', ear:'#e0c4a0', body:'linear-gradient(#1e3a5f,#122540)', sleeve:'#1a3250', belt:'#0d1a30', collar:'#2a4a6a', skirt:'#122540', extra:'<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:40px;height:16px;background:linear-gradient(#2a2a2a,#1a1a1a);border-radius:7px 7px 2px 2px;z-index:10;border:2px solid #444;"></div>',
+                  qs:[{q:'下西洋遇到最危险的事？',a:'风暴和海盗喵！但宝船火炮可不是吃素的。'},{q:'您真的是宦官吗？',a:'（坦然）是的，但航海让本喵看到了更大的世界。'},{q:'有没有带回奇珍异宝？',a:'长颈鹿、狮子、香料，让大明的猫猫大开眼界！'},{q:'最想吐槽的事？',a:'有人说我下西洋是去找建文帝…想象力太丰富了喵！'}] },
+                { id:'kangxi', dy:'清朝', yr:'1700', nm:'康熙', tt:'千古一帝', dc:'qing', hd:'#fdf0e0', ear:'#e0c8a0', body:'linear-gradient(#3a4a6a,#1a2a4a)', sleeve:'#2a3a5a', belt:'#8a7a50', collar:'#c8b060', skirt:'#1a2a4a', extra:'<div style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);width:36px;height:18px;background:linear-gradient(#1a1a1a,#0a0a0a);border-radius:7px 7px 2px 2px;z-index:10;"></div>',
+                  qs:[{q:'八岁登基害怕吗？',a:'有孝庄太皇太后教导喵，还有一群大臣辅助。'},{q:'您真的微服私访过吗？',a:'朕喜欢体察民情，有时候低调出行更真实。'},{q:'最讨厌什么食物？',a:'御膳房花样太多，但朕偏爱简单的小菜。'},{q:'最骄傲的功绩？',a:'平定三藩、收复台湾！奠定大清版图喵。'}] },
+            ];
+            chars.forEach(c => { if (!c.qs || c.qs.length < 4) { c.qs = [{q:'有什么想吐槽的吗？',a:'喵生苦短，及时行乐喵～'},{q:'用一句话总结自己？',a:'我就是我，不一样的烟火喵！'},{q:'最想吃什么？',a:'小鱼干！永远的神喵！'},{q:'对后人有什么建议？',a:'别太卷了，健康最重要喵。'}]; } });
+
+            let ci = 0;
+            function catHTML(id, c) {
+                return `<div class="character-wrapper" id="${id}"><div class="cat-head" style="background:${c.hd};"><div class="cat-ear left" style="border-bottom-color:${c.ear};"></div><div class="cat-ear right" style="border-bottom-color:${c.ear};"></div><div class="cat-eyes"><div class="cat-eye"><div class="eye-shine"></div></div><div class="cat-eye"><div class="eye-shine"></div></div></div><div class="cat-nose"></div><div class="cat-mouth"></div><div class="cat-blush left"></div><div class="cat-blush right"></div><div class="cat-whiskers"><div class="whisk wl1"></div><div class="whisk wl2"></div><div class="whisk wr1"></div><div class="whisk wr2"></div></div>${c.extra||''}</div><div class="cat-body" style="background:${c.body};"><div class="cross-collar" style="background:${c.collar};"></div><div class="belt" style="background:${c.belt};"></div><div class="sleeves"><div class="sleeve left" style="background:${c.sleeve};"></div><div class="sleeve right" style="background:${c.sleeve};"></div></div><div class="skirt" style="background:${c.skirt};"></div></div><div class="cat-tag">${c.nm}猫猫<br><small>${c.tt}</small></div></div>`;
+            }
+            // 主角：穿现代夹克的喵
+            function protagonistHTML() {
+                return `<div class="character-wrapper" id="pc"><div class="cat-head" style="background:#fdf0e3;"><div class="cat-ear left" style="border-bottom-color:#e8c8a8;"></div><div class="cat-ear right" style="border-bottom-color:#e8c8a8;"></div><div class="modern-goggles"><div class="goggle-lens"></div><div class="goggle-lens"></div></div><div class="cat-eyes" style="top:24px;"><div class="cat-eye"><div class="eye-shine"></div></div><div class="cat-eye"><div class="eye-shine"></div></div></div><div class="cat-nose" style="top:35px;"></div><div class="cat-mouth" style="top:38px;"></div><div class="cat-blush left" style="top:36px;"></div><div class="cat-blush right" style="top:36px;"></div><div class="cat-whiskers" style="top:35px;"><div class="whisk wl1"></div><div class="whisk wl2"></div><div class="whisk wr1"></div><div class="whisk wr2"></div></div></div><div class="modern-body"><div class="modern-jacket"></div><div class="modern-collar"></div><div class="modern-belt"></div><div class="modern-watch"></div><div class="modern-sleeves"><div class="modern-sleeve left"></div><div class="modern-sleeve right"></div></div></div><div class="cat-tag">时间旅行喵<br><small>⏳ 时空记者</small></div></div>`;
+            }
+
+            function render(i) { const c = chars[i]; ci = i; el.sd.className = 'scene-decoration ' + c.dc; el.ei.textContent = c.dy + ' · ' + c.yr; el.cz.innerHTML = protagonistHTML() + '<div style="font-size:1.8em;color:rgba(200,180,150,0.5);z-index:5;">✦</div>' + catHTML('npc', c);
+                document.getElementById('npc').addEventListener('click', () => showQ());
+                document.getElementById('pc').addEventListener('click', () => { const memes = ['🤔 自己吓自己～', '😲 震撼我1000年！', '📝 这八卦绝绝子！', '😂 这谁顶得住啊！', '🐾 泰裤辣！', '✨ 真香警告喵！', '💀 笑不活了家人们', '🔥 这波在大气层']; showB(memes[Math.floor(Math.random() * memes.length)], '#pc'); });
+                document.getElementById('scenePanel').classList.add('rift-active'); setTimeout(() => document.getElementById('scenePanel').classList.remove('rift-active'), 800); }
+            function showB(t, s) { const o = document.querySelector('.dialogue-bubble'); if (o) o.remove(); const tg = document.querySelector(s); if (!tg) return; const b = document.createElement('div'); b.className = 'dialogue-bubble'; b.textContent = t; tg.style.position = 'relative'; tg.appendChild(b); setTimeout(() => { if (b.parentNode) b.remove(); }, 4000); }
+            function showQ() { const c = chars[ci]; const old = document.querySelector('.question-overlay'); if (old) old.remove(); const picked = randomPick(c.qs, 3); const overlay = document.createElement('div'); overlay.className = 'question-overlay'; overlay.innerHTML = `<div class="question-panel"><div class="q-title">📋<br>随<br>机<br>问<br>题</div><button class="q-btn">❓ ${picked[0].q}</button><button class="q-btn">❓ ${picked[1].q}</button><button class="q-btn">❓ ${picked[2].q}</button></div>`; document.body.appendChild(overlay); const btns = overlay.querySelectorAll('.q-btn'); btns[0].addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); handleA(picked[0].a); }); btns[1].addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); handleA(picked[1].a); }); btns[2].addEventListener('click', (e) => { e.stopPropagation(); overlay.remove(); handleA(picked[2].a); }); overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); }); }
+            function handleA(a) { showB('🐱 ' + a, '#npc'); const memes = ['😲 震撼我1000年！', '🤔 自己吓自己～', '📝 绝绝子！记下来！', '😂 这谁顶得住啊', '🐾 泰裤辣！']; setTimeout(() => showB(memes[Math.floor(Math.random() * memes.length)], '#pc'), 1500); }
+            window.gameRandom = function() { el.fo.classList.add('active'); setTimeout(() => { el.fo.classList.remove('active'); render(Math.floor(Math.random() * chars.length)); }, 150); };
+            document.getElementById('bookContainer').addEventListener('click', () => { el.bk.classList.add('flipping'); const idx = Math.floor(Math.random() * chars.length); setTimeout(() => { el.bk.classList.remove('flipping'); el.fo.classList.add('active'); setTimeout(() => { el.fo.classList.remove('active'); render(idx); }, 150); }, 600); });
+            document.getElementById('tokenBtn').addEventListener('click', () => { const idx = Math.floor(Math.random() * chars.length); el.tt.textContent = chars[idx].nm; document.getElementById('tokenBtn').classList.add('calling'); setTimeout(() => { document.getElementById('tokenBtn').classList.remove('calling'); el.fo.classList.add('active'); setTimeout(() => { el.fo.classList.remove('active'); render(idx); el.tt.innerHTML = '令<br>牌'; }, 150); }, 1000); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); el.fo.classList.add('active'); setTimeout(() => { el.fo.classList.remove('active'); render((ci + 1) % chars.length); }, 150); } else if (e.key === 'ArrowLeft' || e.key === 'a') { e.preventDefault(); el.fo.classList.add('active'); setTimeout(() => { el.fo.classList.remove('active'); render((ci - 1 + chars.length) % chars.length); }, 150); } else if (e.key === ' ') { e.preventDefault(); showQ(); } else if (e.key === 'r') { e.preventDefault(); window.gameRandom(); } });
+            render(0); setTimeout(() => showB('翻书或点令牌召唤历史猫猫～ 点击NPC弹出随机问题！', '#pc'), 800);
+        })();
+    </script>
+</body>
+</html>
